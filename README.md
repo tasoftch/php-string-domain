@@ -14,7 +14,17 @@ It allows to check, if a domain matches to another domain.
 ~~~~php
 use TASoft\StrDom\Domain;
 
+// Children
 Domain::matchesDomainQuery("ch.tasoft.application", "ch.tasoft.application");   // true
 Domain::matchesDomainQuery("ch.tasoft.application", "ch.tasoft.*");             // true
+Domain::matchesDomainQuery("ch.tasoft.application", "ch.*");                    // false
+Domain::matchesDomainQuery("ch.tasoft.application", "ch.*.*");                  // true
+Domain::matchesDomainQuery("ch.tasoft.application", "ch.*.app");                // false
+Domain::matchesDomainQuery("ch.tasoft.application", "ch.*.app*");               // true
+
+// Subdomains
 Domain::matchesDomainQuery("ch.tasoft.application", "ch.");                     // true
+
+// Empty query is always false.
+Domain::matchesDomainQuery("ch.tasoft.application", "");                        // false
 ~~~~
