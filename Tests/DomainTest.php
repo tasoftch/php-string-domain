@@ -29,6 +29,7 @@
  */
 
 use PHPUnit\Framework\TestCase;
+use TASoft\StrDom\Collection\DomainCollection;
 use TASoft\StrDom\Domain;
 
 class DomainTest extends TestCase
@@ -69,6 +70,9 @@ class DomainTest extends TestCase
         $this->assertEquals("application", $last);
     }
 
+    /**
+     * @expectedException \PHPUnit\Framework\Error\Notice
+     */
     public function testMembership() {
         $this->assertTrue(Domain::matchesDomainQuery("ch.tasoft.application", "ch.tasoft.application"));
         $this->assertTrue(Domain::matchesDomainQuery("ch.tasoft.application", "ch.tasoft.*"));
@@ -89,6 +93,85 @@ class DomainTest extends TestCase
 
         $this->assertTrue(Domain::matchesDomainQuery("ch.tasoft.application.test.2", "ch.*.application.*.2"));
         $this->assertTrue(Domain::matchesDomainQuery("ch.test.application.hello.world", "ch.*.application."));
+
         $this->assertTrue(Domain::matchesDomainQuery("ch.abc.application.hello", "ch.*.application.*"));
+
+        $this->assertTrue(Domain::matchesDomainQuery("CH.abc.APPlicatiON.hello", "CH.*.APPlicatiON.*"));
+        $this->assertTrue(Domain::matchesDomainQuery("CH.abc.APPlicatiON.hello", "ch.*.application.*"));
+        $this->assertFalse(Domain::matchesDomainQuery("CH.abc.APPlicatiON.hello", "ch.*.application.*", true));
+
+        // triggers notice for invalid domains
+        // ch. abc.application.hello
+        //    ^
+        $this->assertTrue(Domain::matchesDomainQuery("ch. abc.application.hello", "ch.*.application.*"));
+    }
+
+    public function testValidDomain() {
+        $this->assertTrue(Domain::isValid("ch.tasoft.application"));
+        $this->assertTrue(Domain::isValid("-._3844._____"));
+        $this->assertFalse(Domain::isValid(""));
+        $this->assertFalse(Domain::isValid(".ch"));
+        $this->assertFalse(Domain::isValid("ch. 56 . zurre"));
+
+        $this->assertTrue(Domain::isValid("ch.tasoft.application.test.2"));
+        $this->assertTrue(Domain::isValid("ch.test.application.hello.world"));
+        $this->assertTrue(Domain::isValid("ch.abc.application.hello"));
+    }
+
+    /**
+     * @expectedException \PHPUnit\Framework\Error\Warning
+     */
+    public function testInvalidDomainCollection() {
+        $dc = new DomainCollection([
+            "ch.tasoft" => 1,
+            "ch.apps" => 2,
+            "ch.apps.test" => 3,
+            56 => 17        // Invalid! Not a string
+        ]);
+
+        $this->assertCount(3, $dc);
+    }
+
+    /**
+     * @expectedException \PHPUnit\Framework\Error\Warning
+     */
+    public function testInvalidDomainCollection2() {
+        $dc = new DomainCollection([
+            "ch.tasoft" => 1,
+            "ch.apps" => 2,
+            "ch.apps.test" => 3,
+            "ch. apps" => 17        // Invalid domain!
+        ]);
+
+        $this->assertCount(3, $dc);
+    }
+
+    public function testAddingToDC() {
+        $dc = new DomainCollection([
+            "ch.tasoft" => 1,
+            "ch.apps" => 2,
+            "ch.apps.test" => 3,
+        ]);
+
+        $dc->add("ch.tasoft.app", 4, 5, 6);
+        $this->assertCount(6, $dc);
+
+        $dc["ch.apps"] = [2, 3];
+        $this->assertCount(7, $dc);
+
+        $this->assertEquals([4, 5, 6], $dc["ch.tasoft.app"]);
+    }
+
+    public function testYieldingFromDC() {
+        $dc = new DomainCollection([
+            "ch.tasoft" => 1,
+            "ch.apps" => 2,
+            "ch.apps.test" => 3,
+        ]);
+
+        $dc->add("ch.tasoft.app", 4, 5, 6);
+
+        $this->assertEquals([1, 2, 3, 4, 5, 6], $dc->getElementsByQuery("ch."));
+        $this->assertEquals([1, 2], $dc->getElementsByQuery("ch.*"));
     }
 }

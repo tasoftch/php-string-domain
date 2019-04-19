@@ -29,6 +29,12 @@ namespace TASoft\StrDom;
  */
 final class Domain
 {
+    public static function isValid(string $domain): bool {
+        if(preg_match("/^([a-z0-9_\-]+\.?)+$/i", $domain))
+            return true;
+        return false;
+    }
+
     /**
      * Divides a domain into areas
      *
@@ -114,6 +120,11 @@ final class Domain
 
         if(count($qp) > $dp)
             return false;
+
+        if(!self::isValid($domain)) {
+            trigger_error("Invalid domain match is always false", E_USER_NOTICE);
+            return false;
+        }
 
         $deepSearch = function($queries, $array) use (&$deepSearch) {
             $query = array_shift($queries);
