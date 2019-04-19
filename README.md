@@ -27,4 +27,15 @@ Domain::matchesDomainQuery("ch.tasoft.application", "ch.");                     
 
 // Empty query is always false.
 Domain::matchesDomainQuery("ch.tasoft.application", "");                        // false
+
+Domain::matchesDomainQuery("ch.tasoft.application", "ch.tasoft");               // false
+
+// Wildcard queries
+Domain::matchesDomainQuery("ch.tasoft.application", "ch.*.application");        // true
+Domain::matchesDomainQuery("ch.test.application", "ch.*.application");          // true
+Domain::matchesDomainQuery("ch.abc.application", "ch.*.application");           // true
+
+Domain::matchesDomainQuery("ch.tasoft.application.test.2", "ch.*.application.*.2"); //true
+Domain::matchesDomainQuery("ch.test.application.hello.world", "ch.*.application."); //true
+Domain::matchesDomainQuery("ch.abc.application.hello", "ch.*.application.*");   //true
 ~~~~
