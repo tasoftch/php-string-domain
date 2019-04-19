@@ -36,24 +36,18 @@ class DomainTreeCollection extends DomainCollection
 {
     use StrictEqualObjectsTrait;
 
-    private $_reverse = [];
+    private $_treeCollection = [];
+
 
     /**
      * @inheritDoc
      */
-    public function count()
-    {
-        $sum = 0;
-        array_walk($this->_reverse, function($A) use (&$sum) {
-            $sum += count($A);
-        });
-        return $sum;
-    }
-
     public function offsetSet($offset, $value)
     {
+        parent::offsetSet($offset, $value);
+
         if(Domain::isValid($offset)) {
-            $p = &$this->collection;
+            $p = &$this->_treeCollection;
             foreach(Domain::explode($offset) as $part) {
                 $l = $p[$part] ?? [];
                 $p[$part] = $l;
@@ -63,17 +57,16 @@ class DomainTreeCollection extends DomainCollection
         }
     }
 
-    public function offsetGet($offset)
+    /**
+     * @inheritDoc
+     */
+    public function offsetUnset($offset)
     {
-        if(Domain::isValid($offset)) {
-            $p = $this->collection;
-            foreach(Domain::explode($offset) as $part) {
-                if(!isset($p[$part]))
-                    return NULL;
-                $p = $p[$part];
-            }
-            return $p["#"] ?? NULL;
+        parent::offsetUnset($offset);
+
+        if($root = Domain::explode($offset) [0] ?? NULL) {
+            if(isset($this->collection[$root]))
+                unset($this->collection[$root]);
         }
-        return NULL;
     }
 }
