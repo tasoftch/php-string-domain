@@ -37,6 +37,8 @@ class DomainCollection extends AbstractCollection
 {
     use StrictEqualObjectsTrait;
 
+    const OPTION_MATCH_CASE_SENSITIVE = 1<<0;
+
     /**
      * DomainCollection constructor.
      *
@@ -54,7 +56,7 @@ class DomainCollection extends AbstractCollection
             foreach($collection as $domain => $element) {
                 if(is_string($domain)) {
                     if(Domain::isValid($domain)) {
-                        $this->collection[$domain][] = $element;
+                        $this[$domain] = $element;
                     } else {
                         trigger_error("Domain $domain is invalid", E_USER_WARNING);
                     }
@@ -83,8 +85,11 @@ class DomainCollection extends AbstractCollection
      */
     public function offsetSet($offset, $value)
     {
-        if(Domain::isValid($offset) && is_array($value)) {
-            $this->collection[$offset] = $value;
+        if(Domain::isValid($offset)) {
+            if(is_array($value))
+                $this->collection[$offset] = $value;
+            else
+                $this->collection[$offset][] = $value;
         }
     }
 
@@ -107,7 +112,7 @@ class DomainCollection extends AbstractCollection
     public function add(string $domain, ...$elements) {
         if(Domain::isValid($domain)) {
             foreach($elements as $element)
-                $this->collection[$domain][] = $element;
+                $this[$domain] = $element;
         }
     }
 
@@ -129,10 +134,11 @@ class DomainCollection extends AbstractCollection
      * @param string $domainQuery
      * @param int $options
      * @return \Generator
+     * @see DomainCollection::OPTION_MATCH_* constants
      */
-    public function yieldElementsByQuery(string $domainQuery, bool $caseSensitive = false) {
+    public function yieldElementsByQuery(string $domainQuery, int $options = 0) {
         foreach($this->collection as $domain => $elements) {
-            if(Domain::matchesDomainQuery($domain, $domainQuery, $caseSensitive)) {
+            if(Domain::matchesDomainQuery($domain, $domainQuery, $options & self::OPTION_MATCH_CASE_SENSITIVE ? true : false)) {
                 foreach($elements as $element)
                     yield $domain => $element;
             }
@@ -145,10 +151,11 @@ class DomainCollection extends AbstractCollection
      * @param string $domainQuery
      * @param int $options
      * @return array
+     * @see DomainCollection::OPTION_MATCH_* constants
      */
-    public function getElementsByQuery(string $domainQuery, bool $caseSensitive = false): array {
+    public function getElementsByQuery(string $domainQuery, int $options = 0): array {
         $list = [];
-        foreach($this->yieldElementsByQuery($domainQuery, $caseSensitive) as $element) {
+        foreach($this->yieldElementsByQuery($domainQuery, $options) as $element) {
             $list[] = $element;
         }
         return $list;

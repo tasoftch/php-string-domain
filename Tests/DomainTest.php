@@ -30,6 +30,7 @@
 
 use PHPUnit\Framework\TestCase;
 use TASoft\StrDom\Collection\DomainCollection;
+use TASoft\StrDom\Collection\DomainTreeCollection;
 use TASoft\StrDom\Domain;
 
 class DomainTest extends TestCase
@@ -91,7 +92,7 @@ class DomainTest extends TestCase
         $this->assertTrue(Domain::matchesDomainQuery("ch.test.application", "ch.*.application"));
         $this->assertTrue(Domain::matchesDomainQuery("ch.abc.application", "ch.*.application"));
 
-        $this->assertTrue(Domain::matchesDomainQuery("ch.tasoft.application.test.2", "ch.*.application.*.2"));
+        $this->assertTrue(Domain::matchesDomainQuery("ch.tasoft.application.test._2", "ch.*.application.*._2"));
         $this->assertTrue(Domain::matchesDomainQuery("ch.test.application.hello.world", "ch.*.application."));
 
         $this->assertTrue(Domain::matchesDomainQuery("ch.abc.application.hello", "ch.*.application.*"));
@@ -108,12 +109,12 @@ class DomainTest extends TestCase
 
     public function testValidDomain() {
         $this->assertTrue(Domain::isValid("ch.tasoft.application"));
-        $this->assertTrue(Domain::isValid("-._3844._____"));
+        $this->assertTrue(Domain::isValid("_._3844._____"));
         $this->assertFalse(Domain::isValid(""));
         $this->assertFalse(Domain::isValid(".ch"));
         $this->assertFalse(Domain::isValid("ch. 56 . zurre"));
 
-        $this->assertTrue(Domain::isValid("ch.tasoft.application.test.2"));
+        $this->assertTrue(Domain::isValid("ch.tasoft.application.test._2"));
         $this->assertTrue(Domain::isValid("ch.test.application.hello.world"));
         $this->assertTrue(Domain::isValid("ch.abc.application.hello"));
     }
@@ -173,5 +174,15 @@ class DomainTest extends TestCase
 
         $this->assertEquals([1, 2, 3, 4, 5, 6], $dc->getElementsByQuery("ch."));
         $this->assertEquals([1, 2], $dc->getElementsByQuery("ch.*"));
+    }
+
+    public function testDomainTree() {
+        $dt = new DomainTreeCollection([
+            "ch.tasoft" => 1,
+            "ch.apps" => 2,
+            "ch.apps.test" => 3,
+        ]);
+
+        $this->assertEquals([1], $dt["ch.tasoft"]);
     }
 }

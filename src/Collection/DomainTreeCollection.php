@@ -24,7 +24,56 @@
 namespace TASoft\StrDom\Collection;
 
 
-class DomainTreeCollection
-{
+use TASoft\Collection\StrictEqualObjectsTrait;
+use TASoft\StrDom\Domain;
 
+/**
+ * Class DomainTreeCollection stores elements in a hierarchical way, so children and parents can be filtered
+ *
+ * @package TASoft\StrDom\Collection
+ */
+class DomainTreeCollection extends DomainCollection
+{
+    use StrictEqualObjectsTrait;
+
+    private $_reverse = [];
+
+    /**
+     * @inheritDoc
+     */
+    public function count()
+    {
+        $sum = 0;
+        array_walk($this->_reverse, function($A) use (&$sum) {
+            $sum += count($A);
+        });
+        return $sum;
+    }
+
+    public function offsetSet($offset, $value)
+    {
+        if(Domain::isValid($offset)) {
+            $p = &$this->collection;
+            foreach(Domain::explode($offset) as $part) {
+                $l = $p[$part] ?? [];
+                $p[$part] = $l;
+                $p = &$p[$part];
+            }
+            $p['#'][] = $value;
+        }
+    }
+
+    public function offsetGet($offset)
+    {
+        if(Domain::isValid($offset)) {
+            $p = $this->collection;
+            foreach(Domain::explode($offset) as $part) {
+                if(!isset($p[$part]))
+                    return NULL;
+                $p = $p[$part];
+            }
+            return $p["#"] ?? NULL;
+        }
+        return NULL;
+    }
 }

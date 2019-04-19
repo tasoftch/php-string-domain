@@ -30,7 +30,7 @@ namespace TASoft\StrDom;
 final class Domain
 {
     public static function isValid(string $domain): bool {
-        if(preg_match("/^([a-z0-9_\-]+\.?)+$/i", $domain))
+        if(preg_match("/^([a-z_]+[a-z_0-9]*\.?)+$/i", $domain))
             return true;
         return false;
     }
