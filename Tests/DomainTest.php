@@ -183,6 +183,22 @@ class DomainTest extends TestCase
             "ch.apps.test" => 3,
         ]);
 
+        // Until here, it is equal to normal domain collection
         $this->assertEquals([1], $dt["ch.tasoft"]);
+
+
+        $this->assertEquals([1, 2, 3], $dt->getElementsByQuery("ch."));
+        $this->assertEquals([1, 3], $dt->getElementsByQuery("ch.", $dt::OPTION_MATCH_LEAFES_ONLY));
+
+        $dt->add("ch.tasoft.app", 3, 4);
+
+        // Now ch.tasoft is no leaf anymore!
+        $this->assertEquals([3, 4, 3], $dt->getElementsByQuery("ch.", $dt::OPTION_MATCH_LEAFES_ONLY));
+
+        // Query "." fetches all elements ordered by domain inheritance
+        $this->assertEquals([1, 3, 4, 2, 3], $dt->getElementsByQuery("."));
+
+        // Same objects but the order is like they were added!
+        $this->assertEquals([1, 2, 3, 3, 4], $dt->getAll());
     }
 }

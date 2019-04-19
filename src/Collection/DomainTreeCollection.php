@@ -36,6 +36,8 @@ class DomainTreeCollection extends DomainCollection
 {
     use StrictEqualObjectsTrait;
 
+    const OPTION_MATCH_LEAFES_ONLY = 1<<1;
+
     private $_treeCollection = [];
 
 
@@ -68,5 +70,41 @@ class DomainTreeCollection extends DomainCollection
             if(isset($this->collection[$root]))
                 unset($this->collection[$root]);
         }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function yieldElementsByQuery(string $domainQuery, int $options = 0)
+    {
+        $deepSearch = function($parts, $collection, $root = "", $yieldAll = false) use ($options, &$deepSearch) {
+            $part = array_shift($parts);
+            if($yieldAll)
+                $part = '';
+
+            foreach($collection as $area => $container) {
+                if($part == '' || fnmatch($part, $area, $options & self::OPTION_MATCH_CASE_SENSITIVE ? FNM_CASEFOLD : 0)) {
+                    $domain = $root ? "$root.$area" : $area;
+
+                    if(
+                        ($content = $container["#"] ?? NULL) && (
+                            $yieldAll || // If the query is a subdomains wildcard, yield everything!
+                            ($options & self::OPTION_MATCH_LEAFES_ONLY) == 0 || // Not leafes only
+                                count($container) == 1                          // Or with leafes only, when container does not hold more areas
+                        )
+                    ) {
+                        foreach($content as $c)
+                            yield $domain => $c;
+                    }
+
+                    unset($container["#"]);
+
+                    if($parts || ($container && $part == ''))
+                        yield from $deepSearch($parts, $container, $domain, $part == '');
+                }
+            }
+        };
+
+        yield from $deepSearch(Domain::explode($domainQuery), $this->_treeCollection);
     }
 }

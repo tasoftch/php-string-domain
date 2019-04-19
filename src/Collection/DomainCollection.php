@@ -160,4 +160,16 @@ class DomainCollection extends AbstractCollection
         }
         return $list;
     }
+
+    /**
+     *
+     */
+    public function getAll() {
+        $elements = [];
+        array_walk($this->collection, function($A) use (&$elements) {
+            foreach($A as $element)
+                $elements[] = $element;
+        });
+        return $elements;
+    }
 }
