@@ -28,6 +28,11 @@ use TASoft\Collection\AbstractCollection;
 use TASoft\Collection\StrictEqualObjectsTrait;
 use TASoft\StrDom\Domain;
 
+/**
+ * Class DomainCollection stores a plain list of domains with assigned elements.
+ *
+ * @package TASoft\StrDom\Collection
+ */
 class DomainCollection extends AbstractCollection
 {
     use StrictEqualObjectsTrait;
