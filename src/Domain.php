@@ -29,10 +29,28 @@ namespace TASoft\StrDom;
  */
 final class Domain
 {
+    /**
+     * Checks, if a domain string is valid
+     *
+     * @param string $domain
+     * @return bool
+     */
     public static function isValid(string $domain): bool {
         if(preg_match("/^([a-z_]+[a-z_0-9]*\.?)+$/i", $domain))
             return true;
         return false;
+    }
+
+    /**
+     * Checks, if a domain query needs to be matched by the matchesDomainQuery or if it is plain
+     *
+     * @param string $domainQuery
+     * @return bool
+     */
+    public static function isWildCardDomainQuery(string $domainQuery): bool {
+        if(strpos($domainQuery, '*') !== false)
+            return true;
+        return $domainQuery[ strlen($domainQuery) - 1 ] == '.' ? true : false;
     }
 
     /**
@@ -114,6 +132,11 @@ final class Domain
     public static function matchesDomainQuery(string $domain, string $domainQuery, bool $caseSensitive = false): bool {
         if(!$domainQuery)
             return false;
+
+        if(!self::isWildCardDomainQuery($domainQuery)) {
+            // Increase performance
+            return ($caseSensitive ? strcmp($domain, $domainQuery) : strcasecmp($domain, $domainQuery)) === 0;
+        }
 
         $dp = self::explode($caseSensitive == false ? strtoupper($domain) : $domain);
         $qp = self::explode($caseSensitive == false ? strtoupper($domainQuery) : $domainQuery);
